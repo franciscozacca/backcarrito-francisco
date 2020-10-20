@@ -3,17 +3,21 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const jwt = require('jsonwebtoken');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var productosRouter = require('./routes/productos');
+var usersAdminRouter = require('./routes/usersAdmin');
+var productsRouter = require('./routes/products');
 var ventaRouter = require('./routes/venta');
 var categoriesRouter = require('./routes/categories');
-
+const jwt = require('jsonwebtoken');
+require('dotenv').config() //Incluir para el env
 
 var app = express();
-app.set('secretKey',"dn20203")
+
+console.log(process.env.SECRET_KEY) //Acceso a variable env
+app.set('secretKey',process.env.SECRET_KEY);
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -24,25 +28,24 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+app.use('/usersAdmin', usersAdminRouter);
 app.use('/users', usersRouter);
-//app.use('/productos',validateUser, productosRouter);
-app.use('/productos', productosRouter);
+app.use('/productos', productsRouter);
 app.use('/venta', ventaRouter);
-app.use('/category', categoriesRouter);
-
+app.use('/categories',validateUser, categoriesRouter);
 
 function validateUser(req,res,next){
-  jwt.verify(req.headers["x-access-token"],req.app.get("secretKey"),function(err,decoded){
+  jwt.verify(req.headers['x-access-token'],req.app.get("secretKey"),function(err,decoded){
     if(err){
       res.json({message:err.message})
     }else{
-      req.body.tokenData=decoded
-      next()
+      console.log(decoded)
+      req.body.tokenData = decoded;
+      next();
     }
   })
 }
-app.validateUser = validateUser
+app.validateUser = validateUser;
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
@@ -50,15 +53,13 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
-  console.log("Error",err)
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
   res.status(err.status || 500);
-  //res.render('error');
-  res.json({ error: err.message || "Ha ocurrido" })
+  res.json({code:err.code,msg:err.message});
 });
 
 module.exports = app;

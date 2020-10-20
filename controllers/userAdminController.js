@@ -1,4 +1,4 @@
-const usersModel = require("../models/usersModel");
+const usersAdminModel = require("../models/usersAdminModel");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 module.exports = {
@@ -25,9 +25,9 @@ module.exports = {
     validate: async (req, res, next) => {
         try{
             console.log(req.query)
-            const {error,message,users} = await usersModel.validateUser(req.body.user,req.body.password);
+            const {error,message,userAdmin} = await usersAdminModel.validateUser(req.body.user,req.body.password);
             if(!error){
-                const token = jwt.sign({userId:users._id},req.app.get("secretKey"),{expiresIn:"1h"});
+                const token = jwt.sign({userId:userAdmin._id},req.app.get("secretKey"),{expiresIn:"1h"});
                 res.json({message:message,token:token});
                 return;
             }
@@ -42,12 +42,12 @@ module.exports = {
     create: async function (req, res, next) {
         try{
             console.log(req.body);
-            const users = new usersModel({
+            const userAdmin = new usersAdminModel({
                 name: req.body.name,
                 user:req.body.user,
                 password:req.body.password
             })
-            const document = await users.save();
+            const document = await userAdmin.save();
             res.json(document);
         }catch(e){
             next(e)
